@@ -5,19 +5,19 @@ namespace Control_de_Parqueo.Models;
 public class Vehiculo
 {
     [JsonPropertyName("id")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Id { get; set; }
     
     [JsonPropertyName("placa")]
     public string Placa { get; set; } = string.Empty;
     
-    [JsonPropertyName("fecha_registro")]
-    public DateTime FechaRegistro { get; set; }
-    
     [JsonPropertyName("created_at")]
-    public DateTime CreatedAt { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTime? CreatedAt { get; set; }
     
     [JsonPropertyName("updated_at")]
-    public DateTime UpdatedAt { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTime? UpdatedAt { get; set; }
     
     // Navegación (para cuando se incluye en consultas)
     [JsonPropertyName("registros_parqueo")]

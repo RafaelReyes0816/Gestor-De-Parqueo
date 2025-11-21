@@ -20,10 +20,12 @@ public class Recompensa
     public decimal HorasAcumuladas { get; set; }
     
     [JsonPropertyName("fecha_recompensa")]
-    public DateTime FechaRecompensa { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTime? FechaRecompensa { get; set; }
     
     [JsonPropertyName("created_at")]
-    public DateTime CreatedAt { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTime? CreatedAt { get; set; }
     
     // Navegación (para cuando se incluye en consultas)
     [JsonPropertyName("vehiculos")]

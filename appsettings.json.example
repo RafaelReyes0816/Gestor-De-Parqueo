@@ -1,0 +1,17 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=tu-host.supabase.co;Port=5432;Database=postgres;Username=postgres;Password=tu-password;SslMode=Require;TrustServerCertificate=True;Timeout=60;Command Timeout=60"
+  },
+  "Supabase": {
+    "ProjectUrl": "https://tu-proyecto.supabase.co",
+    "ApiKey": "tu-api-key-aqui"
+  }
+}
+

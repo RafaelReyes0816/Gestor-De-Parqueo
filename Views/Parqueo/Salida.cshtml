@@ -110,6 +110,11 @@
             </div>
             <div class="modal-body">
                 <p>¿Está seguro de registrar la salida del vehículo con placa <strong id="placaConfirmarSalida"></strong>?</p>
+                <div class="mb-3 mt-3">
+                    <label for="horaSalida" class="form-label">Hora de Salida (Opcional)</label>
+                    <input type="datetime-local" class="form-control" id="horaSalida">
+                    <div class="form-text">Deje en blanco para usar la hora actual, o seleccione la hora exacta en que el vehículo salió del parqueo</div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -167,6 +172,12 @@
     function confirmarSalida(placa) {
         placaPendienteSalida = placa;
         document.getElementById('placaConfirmarSalida').textContent = placa;
+        
+        // Configurar hora actual por defecto
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('horaSalida').value = now.toISOString().slice(0, 16);
+        
         const confirmarModal = new bootstrap.Modal(document.getElementById('confirmarSalidaModal'));
         confirmarModal.show();
     }
@@ -177,12 +188,28 @@
         confirmarModal.hide();
 
         try {
+            const horaSalidaInput = document.getElementById('horaSalida').value;
+            let horaSalida = null;
+            
+            if (horaSalidaInput) {
+                const fechaHora = new Date(horaSalidaInput);
+                horaSalida = fechaHora.toISOString();
+            }
+
+            const requestBody = {
+                placa: placaPendienteSalida
+            };
+            
+            if (horaSalida) {
+                requestBody.horaSalida = horaSalida;
+            }
+
             const response = await fetch('/Parqueo/SalidaJson', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ placa: placaPendienteSalida })
+                body: JSON.stringify(requestBody)
             });
 
             const data = await response.json();
@@ -199,7 +226,13 @@
                     bodyHtml += `<p><small>Tiempo total: ${data.horasTotales} horas</small></p>`;
                 }
                 if (data.recompensa) {
-                    bodyHtml += `<div class="mt-2 p-2 bg-warning text-dark rounded"><strong>🎁 ${data.recompensa}</strong></div>`;
+                    let recompensaHtml = `<div class="mt-2 p-2 bg-warning text-dark rounded">`;
+                    recompensaHtml += `<strong>🎁 ${data.recompensa}</strong>`;
+                    if (data.tipoRecompensa) {
+                        recompensaHtml += `<br><small>Tipo: <strong>${data.tipoRecompensa}</strong></small>`;
+                    }
+                    recompensaHtml += `</div>`;
+                    bodyHtml += recompensaHtml;
                 }
                 document.getElementById('resultadoSalidaBody').innerHTML = bodyHtml;
                 const resultadoModal = new bootstrap.Modal(document.getElementById('resultadoSalidaModal'));

@@ -11,10 +11,11 @@ public interface IParqueoService
     Task<Vehiculo?> ObtenerVehiculoPorPlacaAsync(string placa);
     Task<List<Vehiculo>> ObtenerTodosLosVehiculosAsync();
     Task<RegistroParqueo?> RegistrarEntradaAsync(string placa);
-    Task<RegistroParqueo?> RegistrarSalidaAsync(string placa);
+    Task<RegistroParqueo?> RegistrarSalidaAsync(string placa, DateTime? horaSalida = null);
     Task<List<RegistroParqueo>> ObtenerRegistrosActivosAsync();
     Task<List<RegistroParqueo>> ObtenerHistorialVehiculoAsync(string placa);
     Task<List<Recompensa>> ObtenerRecompensasVehiculoAsync(string placa);
+    Task<Recompensa?> ObtenerRecompensaPorRegistroAsync(int registroParqueoId);
 }
 
 public class ParqueoService : IParqueoService
@@ -111,13 +112,10 @@ public class ParqueoService : IParqueoService
             return existente;
         }
 
-        // Crear nuevo
+        // Crear nuevo (solo placa, Supabase maneja created_at y updated_at automáticamente)
         var nuevoVehiculo = new
         {
-            placa = placa,
-            fecha_registro = DateTime.UtcNow,
-            created_at = DateTime.UtcNow,
-            updated_at = DateTime.UtcNow
+            placa = placa
         };
 
         var json = JsonSerializer.Serialize(nuevoVehiculo, _jsonOptions);
@@ -208,7 +206,7 @@ public class ParqueoService : IParqueoService
         return registros?.FirstOrDefault();
     }
 
-    public async Task<RegistroParqueo?> RegistrarSalidaAsync(string placa)
+    public async Task<RegistroParqueo?> RegistrarSalidaAsync(string placa, DateTime? horaSalida = null)
     {
         placa = placa.ToUpper().Trim();
         var vehiculo = await ObtenerVehiculoPorPlacaAsync(placa);
@@ -235,11 +233,14 @@ public class ParqueoService : IParqueoService
             throw new Exception($"No se encontró un registro activo para {placa}");
         }
 
+        // Usar hora proporcionada o hora actual
+        var horaSalidaFinal = horaSalida ?? DateTime.Now;
+
         // Actualizar con hora de salida
         var updateData = new
         {
-            hora_salida = DateTime.UtcNow,
-            updated_at = DateTime.UtcNow
+            hora_salida = horaSalidaFinal,
+            estado = "Fuera"
         };
 
         var json = JsonSerializer.Serialize(updateData, _jsonOptions);
@@ -403,6 +404,29 @@ public class ParqueoService : IParqueoService
         catch
         {
             return new List<Recompensa>();
+        }
+    }
+
+    public async Task<Recompensa?> ObtenerRecompensaPorRegistroAsync(int registroParqueoId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"{_baseUrl}/recompensas?registro_parqueo_id=eq.{registroParqueoId}&select=*&limit=1");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var recompensas = JsonSerializer.Deserialize<List<Recompensa>>(content, _jsonOptions);
+            
+            return recompensas?.FirstOrDefault();
+        }
+        catch
+        {
+            return null;
         }
     }
 }

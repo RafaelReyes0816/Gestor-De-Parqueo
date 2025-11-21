@@ -265,12 +265,34 @@ public class ParqueoController : Controller
 
         try
         {
-            var registro = await _parqueoService.RegistrarSalidaAsync(request.Placa);
+            // Si se proporciona hora de salida, usarla; si no, usar hora actual
+            DateTime? horaSalida = null;
+            if (request.HoraSalida != default && request.HoraSalida != DateTime.MinValue)
+            {
+                horaSalida = request.HoraSalida;
+            }
+
+            var registro = await _parqueoService.RegistrarSalidaAsync(request.Placa, horaSalida);
             
             if (registro != null)
             {
                 var horas = registro.HorasTotales ?? 0;
-                var recompensa = horas > 10 ? $"¡Felicidades! El vehículo permaneció {horas:F2} horas. Ha recibido una recompensa." : null;
+                
+                // Esperar un momento para que el trigger se ejecute
+                await Task.Delay(500);
+                
+                // Consultar si se creó una recompensa para este registro
+                Recompensa? recompensaCreada = null;
+                if (horas > 10)
+                {
+                    recompensaCreada = await _parqueoService.ObtenerRecompensaPorRegistroAsync(registro.Id);
+                }
+                
+                string? mensajeRecompensa = null;
+                if (recompensaCreada != null)
+                {
+                    mensajeRecompensa = $"¡Felicidades! El vehículo permaneció {horas:F2} horas. Ha recibido una recompensa: {recompensaCreada.TipoRecompensa}.";
+                }
                 
                 return Json(new 
                 { 
@@ -278,7 +300,8 @@ public class ParqueoController : Controller
                     message = $"Vehículo con placa {request.Placa.ToUpper()} registrado con salida exitosamente.",
                     horaSalida = registro.HoraSalida?.ToString("dd/MM/yyyy HH:mm:ss"),
                     horasTotales = horas.ToString("F2"),
-                    recompensa = recompensa,
+                    recompensa = mensajeRecompensa,
+                    tipoRecompensa = recompensaCreada?.TipoRecompensa,
                     placa = request.Placa.ToUpper()
                 });
             }
@@ -319,5 +342,6 @@ public class EntradaRequest
 public class SalidaRequest
 {
     public string Placa { get; set; } = string.Empty;
+    public DateTime HoraSalida { get; set; }
 }
 

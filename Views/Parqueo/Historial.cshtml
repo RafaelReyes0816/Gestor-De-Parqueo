@@ -82,7 +82,7 @@
                                                 <tr>
                                                     <td><strong>@contadorVehiculo</strong></td>
                                                     <td><strong class="fs-5 text-primary">@vehiculo.Placa</strong></td>
-                                                    <td>@vehiculo.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                                                    <td>@(vehiculo.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</td>
                                                     <td>
                                                         <button type="button" class="btn btn-primary btn-sm" 
                                                                 onclick="verHistorial('@vehiculo.Placa')">
@@ -190,7 +190,7 @@
                                                     {
                                                         <tr>
                                                             <td><strong>@contadorRecompensa</strong></td>
-                                                            <td>@recompensa.FechaRecompensa.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                                            <td>@(recompensa.FechaRecompensa?.ToString("dd/MM/yyyy HH:mm:ss") ?? "N/A")</td>
                                                             <td>
                                                                 <strong class="text-success">@recompensa.TipoRecompensa</strong>
                                                             </td>
@@ -337,7 +337,7 @@
                         <div class="card text-center border-success">
                             <div class="card-body">
                                 <h5 class="card-title text-success"><i class="bi bi-clock"></i></h5>
-                                <h3 class="mb-0">${data.totalHoras.toFixed(1)}</h3>
+                                <h3 class="mb-0">${(data.totalHoras || 0).toFixed(1)}</h3>
                                 <small class="text-muted">Horas Totales</small>
                             </div>
                         </div>
@@ -364,89 +364,6 @@
                     </div>
                 </div>
             `;
-            
-            
-            // Recompensas
-            if (data.recompensas && data.recompensas.length > 0) {
-                html += `
-                    <div class="card border-success">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0"><i class="bi bi-gift-fill"></i> Recompensas Obtenidas</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-success table-striped table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Fecha y Hora</th>
-                                            <th>Tipo de Recompensa</th>
-                                            <th>Horas Acumuladas</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                `;
-                
-                data.recompensas.forEach((recompensa, index) => {
-                    // Validar y parsear fecha de recompensa
-                    let fecha;
-                    try {
-                        if (recompensa.fechaRecompensa) {
-                            let fechaStr = recompensa.fechaRecompensa;
-                            if (!fechaStr.includes('Z') && !fechaStr.includes('+') && !fechaStr.includes('T')) {
-                                fechaStr = fechaStr + 'Z';
-                            }
-                            fecha = new Date(fechaStr);
-                            
-                            if (isNaN(fecha.getTime())) {
-                                fecha = new Date(recompensa.fechaRecompensa);
-                            }
-                            if (isNaN(fecha.getTime())) {
-                                fecha = null;
-                            }
-                        } else {
-                            fecha = null;
-                        }
-                    } catch (e) {
-                        fecha = null;
-                    }
-                    
-                    const formatearFechaHora = (fecha) => {
-                        if (!fecha || isNaN(fecha.getTime())) {
-                            return '-';
-                        }
-                        const dia = String(fecha.getDate()).padStart(2, '0');
-                        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-                        const año = fecha.getFullYear();
-                        const horas = String(fecha.getHours()).padStart(2, '0');
-                        const minutos = String(fecha.getMinutes()).padStart(2, '0');
-                        const segundos = String(fecha.getSeconds()).padStart(2, '0');
-                        return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
-                    };
-                    html += `
-                        <tr>
-                            <td><strong>${index + 1}</strong></td>
-                            <td>${formatearFechaHora(fecha)}</td>
-                            <td><strong class="text-success">${recompensa.tipoRecompensa}</strong></td>
-                            <td><span class="badge bg-warning text-dark fs-6">${recompensa.horasAcumuladas.toFixed(2)} horas</span></td>
-                        </tr>
-                    `;
-                });
-                
-                html += `
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> Este vehículo aún no ha recibido recompensas.
-                    </div>
-                `;
-            }
             
             modalBody.innerHTML = html;
         } catch (error) {

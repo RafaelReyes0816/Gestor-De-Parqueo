@@ -23,10 +23,12 @@ public class RegistroParqueo
     public string Estado { get; set; } = "Dentro";
     
     [JsonPropertyName("created_at")]
-    public DateTime CreatedAt { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTime? CreatedAt { get; set; }
     
     [JsonPropertyName("updated_at")]
-    public DateTime UpdatedAt { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTime? UpdatedAt { get; set; }
     
     // Navegación (para cuando se incluye en consultas)
     [JsonPropertyName("vehiculos")]

@@ -1,6 +1,7 @@
 Vamos a acalar una detalle, quiero trabajar con SupaBase en este proyecto ya que lo voy a desplegar en Render que soporta ASP.NET y aparte que me piden el despliegue. Ahora primero definamos la base de datos me dejas un script para que yo lo ejecute manualmente en SupaBase (No quiero un script de ejemplo asi que piensa en que podemos ponerle a la base de datos puede ser algo sencilla nomás no es necesario tanta complejidad asi que tranquilo, pero eso si el script debe ser su versión final para evitar errores) y para esto ya que es tarea de universidad no es necesario usar .env directamente te paso el Project URL y el API Key:
 Project URL: https://qpsfdivuveocpnqcxobr.supabase.co
 API Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwc2ZkaXZ1dmVvY3BucWN4b2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2NzkxOTAsImV4cCI6MjA3OTI1NTE5MH0.hMewc6TfqDMseLMgaIA1faHyULrWkuRaTdP-kai6YyE
+Podemos usar el API REST de SupaBase para evitar errores
 Necesito que vayamos en orden y cada que debamos ir al siguiente paso preguntas para evitar problemas ok? y dime si con lo que te expliqué compliremos con estos requisitos:
 Requisitos Técnicos:
  Tecnología: Desarrollar el sistema utilizando ASP.NET

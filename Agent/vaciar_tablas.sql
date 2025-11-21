@@ -1,0 +1,7 @@
+TRUNCATE TABLE recompensas CASCADE;
+TRUNCATE TABLE registros_parqueo CASCADE;
+TRUNCATE TABLE vehiculos CASCADE;
+
+ALTER SEQUENCE vehiculos_id_seq RESTART WITH 1;
+ALTER SEQUENCE registros_parqueo_id_seq RESTART WITH 1;
+ALTER SEQUENCE recompensas_id_seq RESTART WITH 1;
