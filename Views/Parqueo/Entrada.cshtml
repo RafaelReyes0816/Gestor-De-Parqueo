@@ -1,0 +1,172 @@
+@{
+    ViewData["Title"] = "Registro de Entrada";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-arrow-right-circle"></i> Registro de Entrada</h3>
+                </div>
+                <div class="card-body">
+                    <div id="alertContainer"></div>
+
+                    <form id="entradaForm">
+                        <div class="mb-3">
+                            <label for="placa" class="form-label">Número de Placa</label>
+                            <input type="text" class="form-control form-control-lg" id="placa" name="placa" 
+                                   placeholder="Ejemplo: 1891ZLD" required autofocus 
+                                   pattern="[A-Z0-9]{3,10}" 
+                                   title="Ingrese una placa válida (letras y números, sin espacios)">
+                            <div class="form-text">Ingrese el número de placa del vehículo</div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> Registrar Entrada
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmarEntradaModal" tabindex="-1" aria-labelledby="confirmarEntradaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="confirmarEntradaModalLabel">
+                    <i class="bi bi-question-circle"></i> Confirmar Entrada
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de registrar la entrada del vehículo con placa <strong id="placaConfirmar"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmarEntradaBtn">
+                    <i class="bi bi-check-circle"></i> Confirmar Entrada
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Resultado -->
+<div class="modal fade" id="resultadoEntradaModal" tabindex="-1" aria-labelledby="resultadoEntradaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" id="resultadoEntradaHeader">
+                <h5 class="modal-title" id="resultadoEntradaModalLabel">Resultado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="resultadoEntradaBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Convertir a mayúsculas automáticamente
+    document.getElementById('placa').addEventListener('input', function(e) {
+        e.target.value = e.target.value.toUpperCase().replace(/\s/g, '');
+    });
+
+    let placaPendiente = '';
+
+    // Manejar envío del formulario
+    document.getElementById('entradaForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        placaPendiente = document.getElementById('placa').value.trim().toUpperCase();
+        
+        if (!placaPendiente) {
+            document.getElementById('resultadoEntradaHeader').className = 'modal-header bg-danger text-white';
+            document.getElementById('resultadoEntradaModalLabel').innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error';
+            document.getElementById('resultadoEntradaBody').innerHTML = '<p>Por favor, ingrese un número de placa válido.</p>';
+            const resultadoModal = new bootstrap.Modal(document.getElementById('resultadoEntradaModal'));
+            resultadoModal.show();
+            return;
+        }
+
+        // Mostrar modal de confirmación
+        document.getElementById('placaConfirmar').textContent = placaPendiente;
+        const confirmarModal = new bootstrap.Modal(document.getElementById('confirmarEntradaModal'));
+        confirmarModal.show();
+    });
+
+    // Confirmar entrada
+    document.getElementById('confirmarEntradaBtn').addEventListener('click', async function() {
+        const confirmarModal = bootstrap.Modal.getInstance(document.getElementById('confirmarEntradaModal'));
+        confirmarModal.hide();
+
+        try {
+            const response = await fetch('/Parqueo/EntradaJson', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ placa: placaPendiente })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Mostrar modal de éxito
+                document.getElementById('resultadoEntradaHeader').className = 'modal-header bg-success text-white';
+                document.getElementById('resultadoEntradaModalLabel').innerHTML = '<i class="bi bi-check-circle"></i> ¡Éxito!';
+                document.getElementById('resultadoEntradaBody').innerHTML = `
+                    <p><strong>${data.message}</strong></p>
+                    <p><small>Hora de entrada: ${data.horaEntrada}</small></p>
+                `;
+                const resultadoModal = new bootstrap.Modal(document.getElementById('resultadoEntradaModal'));
+                resultadoModal.show();
+
+                // Recargar la página cuando se cierre el modal
+                document.getElementById('resultadoEntradaModal').addEventListener('hidden.bs.modal', function () {
+                    window.location.reload();
+                }, { once: true });
+            } else {
+                // Mostrar modal de error
+                document.getElementById('resultadoEntradaHeader').className = 'modal-header bg-danger text-white';
+                document.getElementById('resultadoEntradaModalLabel').innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error';
+                document.getElementById('resultadoEntradaBody').innerHTML = `<p>${data.message}</p>`;
+                const resultadoModal = new bootstrap.Modal(document.getElementById('resultadoEntradaModal'));
+                resultadoModal.show();
+            }
+        } catch (error) {
+            document.getElementById('resultadoEntradaHeader').className = 'modal-header bg-danger text-white';
+            document.getElementById('resultadoEntradaModalLabel').innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error';
+            document.getElementById('resultadoEntradaBody').innerHTML = '<p>Error al registrar la entrada. Por favor, intente nuevamente.</p>';
+            const resultadoModal = new bootstrap.Modal(document.getElementById('resultadoEntradaModal'));
+            resultadoModal.show();
+        }
+    });
+
+    function mostrarAlerta(mensaje, tipo) {
+        const alertContainer = document.getElementById('alertContainer');
+        alertContainer.innerHTML = `
+            <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // Auto-cerrar después de 5 segundos si es éxito
+        if (tipo === 'success') {
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 5000);
+        }
+    }
+</script>

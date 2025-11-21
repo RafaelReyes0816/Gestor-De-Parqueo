@@ -1,0 +1,332 @@
+@model List<Control_de_Parqueo.Models.RegistroParqueo>
+@{
+    ViewData["Title"] = "Registro de Salida";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0"><i class="bi bi-arrow-left-circle"></i> Registro de Salida</h3>
+                </div>
+                <div class="card-body">
+                    <div id="alertContainer"></div>
+
+                    <!-- Búsqueda por placa -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-search"></i> Buscar por Placa</h5>
+                            <form id="salidaForm" class="row g-3">
+                                <div class="col-md-8">
+                                    <label for="placa" class="form-label">Número de Placa</label>
+                                    <input type="text" class="form-control form-control-lg" id="placa" name="placa" 
+                                           placeholder="Ejemplo: 1891ZLD" required autofocus 
+                                           pattern="[A-Z0-9]{3,10}" 
+                                           title="Ingrese una placa válida (letras y números, sin espacios)">
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-danger btn-lg w-100">
+                                        <i class="bi bi-check-circle"></i> Registrar Salida
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de vehículos activos -->
+                    <div class="card">
+                        <div class="card-header bg-light text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-car-front"></i> Vehículos Actualmente en el Parqueo</h5>
+                            <span class="badge bg-primary" id="contadorActivos">@Model.Count</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="tablaActivosContainer">
+                                @if (Model == null || !Model.Any())
+                                {
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle"></i> No hay vehículos actualmente en el parqueo.
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover" id="tablaActivos">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Placa</th>
+                                                    <th>Hora de Entrada</th>
+                                                    <th>Tiempo Transcurrido</th>
+                                                    <th>Acción</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var registro in Model)
+                                                {
+                                                    var tiempoTranscurrido = DateTime.UtcNow - registro.HoraEntrada;
+                                                    var horas = (int)tiempoTranscurrido.TotalHours;
+                                                    var minutos = tiempoTranscurrido.Minutes;
+                                                    var placa = registro.Vehiculo?.Placa ?? "N/A";
+                                                    
+                                                    <tr data-placa="@placa">
+                                                        <td><strong class="fs-5">@placa</strong></td>
+                                                        <td>@registro.HoraEntrada.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                                        <td>
+                                                            <span class="badge bg-warning text-dark fs-6">
+                                                                @horas h @minutos m
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <button type="button" class="btn btn-danger btn-sm" 
+                                                                    onclick="confirmarSalida('@placa')">
+                                                                <i class="bi bi-box-arrow-right"></i> Dar Salida
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmarSalidaModal" tabindex="-1" aria-labelledby="confirmarSalidaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmarSalidaModalLabel">
+                    <i class="bi bi-question-circle"></i> Confirmar Salida
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de registrar la salida del vehículo con placa <strong id="placaConfirmarSalida"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmarSalidaBtn">
+                    <i class="bi bi-check-circle"></i> Confirmar Salida
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Resultado -->
+<div class="modal fade" id="resultadoSalidaModal" tabindex="-1" aria-labelledby="resultadoSalidaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" id="resultadoSalidaHeader">
+                <h5 class="modal-title" id="resultadoSalidaModalLabel">Resultado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="resultadoSalidaBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let placaPendienteSalida = '';
+
+    // Convertir a mayúsculas automáticamente
+    document.getElementById('placa')?.addEventListener('input', function(e) {
+        e.target.value = e.target.value.toUpperCase().replace(/\s/g, '');
+    });
+
+    // Manejar envío del formulario de búsqueda
+    document.getElementById('salidaForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const placa = document.getElementById('placa').value.trim().toUpperCase();
+        
+        if (!placa) {
+            document.getElementById('resultadoSalidaHeader').className = 'modal-header bg-danger text-white';
+            document.getElementById('resultadoSalidaModalLabel').innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error';
+            document.getElementById('resultadoSalidaBody').innerHTML = '<p>Por favor, ingrese un número de placa válido.</p>';
+            const resultadoModal = new bootstrap.Modal(document.getElementById('resultadoSalidaModal'));
+            resultadoModal.show();
+            return;
+        }
+
+        confirmarSalida(placa);
+    });
+
+    // Función para confirmar salida
+    function confirmarSalida(placa) {
+        placaPendienteSalida = placa;
+        document.getElementById('placaConfirmarSalida').textContent = placa;
+        const confirmarModal = new bootstrap.Modal(document.getElementById('confirmarSalidaModal'));
+        confirmarModal.show();
+    }
+
+    // Confirmar salida
+    document.getElementById('confirmarSalidaBtn').addEventListener('click', async function() {
+        const confirmarModal = bootstrap.Modal.getInstance(document.getElementById('confirmarSalidaModal'));
+        confirmarModal.hide();
+
+        try {
+            const response = await fetch('/Parqueo/SalidaJson', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ placa: placaPendienteSalida })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Mostrar modal de éxito
+                document.getElementById('resultadoSalidaHeader').className = 'modal-header bg-success text-white';
+                document.getElementById('resultadoSalidaModalLabel').innerHTML = '<i class="bi bi-check-circle"></i> ¡Éxito!';
+                let bodyHtml = `<p><strong>${data.message}</strong></p>`;
+                if (data.horaSalida) {
+                    bodyHtml += `<p><small>Hora de salida: ${data.horaSalida}</small></p>`;
+                }
+                if (data.horasTotales) {
+                    bodyHtml += `<p><small>Tiempo total: ${data.horasTotales} horas</small></p>`;
+                }
+                if (data.recompensa) {
+                    bodyHtml += `<div class="mt-2 p-2 bg-warning text-dark rounded"><strong>🎁 ${data.recompensa}</strong></div>`;
+                }
+                document.getElementById('resultadoSalidaBody').innerHTML = bodyHtml;
+                const resultadoModal = new bootstrap.Modal(document.getElementById('resultadoSalidaModal'));
+                resultadoModal.show();
+
+                // Recargar la página cuando se cierre el modal
+                document.getElementById('resultadoSalidaModal').addEventListener('hidden.bs.modal', function () {
+                    window.location.reload();
+                }, { once: true });
+            } else {
+                // Mostrar modal de error
+                document.getElementById('resultadoSalidaHeader').className = 'modal-header bg-danger text-white';
+                document.getElementById('resultadoSalidaModalLabel').innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error';
+                document.getElementById('resultadoSalidaBody').innerHTML = `<p>${data.message}</p>`;
+                const resultadoModal = new bootstrap.Modal(document.getElementById('resultadoSalidaModal'));
+                resultadoModal.show();
+            }
+        } catch (error) {
+            document.getElementById('resultadoSalidaHeader').className = 'modal-header bg-danger text-white';
+            document.getElementById('resultadoSalidaModalLabel').innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error';
+            document.getElementById('resultadoSalidaBody').innerHTML = '<p>Error al registrar la salida. Por favor, intente nuevamente.</p>';
+            const resultadoModal = new bootstrap.Modal(document.getElementById('resultadoSalidaModal'));
+            resultadoModal.show();
+        }
+    });
+
+    // Función para actualizar la tabla de activos
+    async function actualizarTabla() {
+        const container = document.getElementById('tablaActivosContainer');
+        const contador = document.getElementById('contadorActivos');
+        
+        // Mostrar loading
+        container.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Actualizando...</p></div>';
+
+        try {
+            const response = await fetch('/Parqueo/ActivosJson');
+            const data = await response.json();
+
+            if (data.success && data.registros && data.registros.length > 0) {
+                let html = '<div class="table-responsive"><table class="table table-striped table-hover"><thead class="table-dark"><tr><th>Placa</th><th>Hora de Entrada</th><th>Tiempo Transcurrido</th><th>Acción</th></tr></thead><tbody>';
+                
+                data.registros.forEach(registro => {
+                    // Validar y formatear fecha correctamente
+                    let fechaEntrada;
+                    try {
+                        // Intentar parsear la fecha con diferentes formatos
+                        if (registro.horaEntrada) {
+                            fechaEntrada = new Date(registro.horaEntrada);
+                            // Si no tiene Z, agregarlo para UTC
+                            if (!registro.horaEntrada.includes('Z') && !registro.horaEntrada.includes('+')) {
+                                fechaEntrada = new Date(registro.horaEntrada + 'Z');
+                            }
+                        } else {
+                            fechaEntrada = new Date();
+                        }
+                        
+                        // Validar que la fecha sea válida
+                        if (isNaN(fechaEntrada.getTime())) {
+                            fechaEntrada = new Date();
+                        }
+                    } catch (e) {
+                        fechaEntrada = new Date();
+                    }
+                    
+                    const ahora = new Date();
+                    const diff = ahora - fechaEntrada;
+                    const horas = Math.floor(diff / (1000 * 60 * 60));
+                    const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const placa = registro.vehiculo?.placa || 'N/A';
+                    
+                    const formatearFecha = (fecha) => {
+                        if (!fecha || isNaN(fecha.getTime())) {
+                            return '-';
+                        }
+                        const dia = String(fecha.getDate()).padStart(2, '0');
+                        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+                        const año = fecha.getFullYear();
+                        const horas = String(fecha.getHours()).padStart(2, '0');
+                        const minutos = String(fecha.getMinutes()).padStart(2, '0');
+                        const segundos = String(fecha.getSeconds()).padStart(2, '0');
+                        return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
+                    };
+                    
+                    html += `
+                        <tr data-placa="${placa}">
+                            <td><strong class="fs-5">${placa}</strong></td>
+                            <td>${formatearFecha(fechaEntrada)}</td>
+                            <td><span class="badge bg-warning text-dark fs-6">${horas} h ${minutos} m</span></td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmarSalida('${placa}')">
+                                    <i class="bi bi-box-arrow-right"></i> Dar Salida
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+                contador.textContent = data.registros.length;
+            } else {
+                container.innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle"></i> No hay vehículos actualmente en el parqueo.</div>';
+                contador.textContent = '0';
+            }
+        } catch (error) {
+            container.innerHTML = '<div class="alert alert-danger">Error al actualizar la lista. Por favor, recargue la página.</div>';
+        }
+    }
+
+    function mostrarAlerta(mensaje, tipo) {
+        const alertContainer = document.getElementById('alertContainer');
+        alertContainer.innerHTML = `
+            <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        if (tipo === 'success') {
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 5000);
+        }
+    }
+
+</script>

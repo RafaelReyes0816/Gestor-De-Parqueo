@@ -1,0 +1,108 @@
+﻿@{
+    ViewData["Title"] = "Sistema de Control de Parqueo UPDS";
+}
+
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 text-primary"><i class="bi bi-p-square"></i> Sistema de Control de Parqueo</h1>
+        <p class="lead">UPDS - Universidad Privada Domingo Savio</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Registro de Entrada -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-arrow-right-circle-fill text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">Registro de Entrada</h5>
+                    <p class="card-text text-muted">Registra la entrada de un vehículo al parqueo</p>
+                    <a asp-controller="Parqueo" asp-action="Entrada" class="btn btn-primary w-100">
+                        <i class="bi bi-arrow-right-circle"></i> Registrar Entrada
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registro de Salida -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-danger">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-arrow-left-circle-fill text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">Registro de Salida</h5>
+                    <p class="card-text text-muted">Registra la salida de un vehículo del parqueo</p>
+                    <a asp-controller="Parqueo" asp-action="Salida" class="btn btn-danger w-100">
+                        <i class="bi bi-arrow-left-circle"></i> Registrar Salida
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehículos Activos -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-info">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-car-front-fill text-info" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">Vehículos Activos</h5>
+                    <p class="card-text text-muted">Consulta los vehículos actualmente en el parqueo</p>
+                    <a asp-controller="Parqueo" asp-action="Activos" class="btn btn-info w-100 text-white">
+                        <i class="bi bi-list-ul"></i> Ver Activos
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-secondary">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-clock-history text-secondary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">Historial</h5>
+                    <p class="card-text text-muted">Consulta el historial y recompensas de un vehículo</p>
+                    <a asp-controller="Parqueo" asp-action="Historial" class="btn btn-secondary w-100">
+                        <i class="bi bi-search"></i> Consultar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información del Sistema -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información del Sistema</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-check-circle text-success"></i> Funcionalidades</h6>
+                            <ul>
+                                <li>Registro de vehículos por número de placa</li>
+                                <li>Control de entrada y salida</li>
+                                <li>Seguimiento de tiempo de permanencia</li>
+                                <li>Sistema de recompensas automático</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-gift text-warning"></i> Sistema de Recompensas</h6>
+                            <p class="mb-0">
+                                Los vehículos que permanezcan más de <strong>10 horas</strong> en el parqueo 
+                                recibirán automáticamente una recompensa (limpiavidrios, vaselina u otro).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

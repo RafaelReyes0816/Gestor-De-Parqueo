@@ -1,0 +1,460 @@
+@model List<Control_de_Parqueo.Models.RegistroParqueo>
+@{
+    ViewData["Title"] = "Historial de Vehículo";
+    var recompensas = ViewBag.Recompensas as List<Control_de_Parqueo.Models.Recompensa> ?? new List<Control_de_Parqueo.Models.Recompensa>();
+    var placa = ViewBag.Placa as string ?? "";
+    var vehiculos = ViewBag.Vehiculos as List<Control_de_Parqueo.Models.Vehiculo> ?? new List<Control_de_Parqueo.Models.Vehiculo>();
+    
+    // Calcular estadísticas
+    var totalRegistros = Model?.Count ?? 0;
+    var registrosCompletos = Model?.Count(r => r.HoraSalida.HasValue) ?? 0;
+    var totalHoras = Model?.Where(r => r.HorasTotales.HasValue).Sum(r => r.HorasTotales.Value) ?? 0;
+    var totalRecompensas = recompensas.Count;
+    var estadoActual = Model?.Any(r => r.Estado == "Dentro") == true ? "Dentro" : "Fuera";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h3 class="mb-0"><i class="bi bi-clock-history"></i> Historial de Vehículo</h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Error:</strong> @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Búsqueda -->
+                    <div class="card mb-4 border-primary">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary"><i class="bi bi-search"></i> Buscar Historial</h5>
+                            <form id="buscarHistorialForm" class="row g-3">
+                                <div class="col-md-8">
+                                    <label for="placa" class="form-label">Número de Placa</label>
+                                    <input type="text" class="form-control form-control-lg" id="placa" name="placa" 
+                                           placeholder="Ejemplo: 1891ZLD" value="@placa" required autofocus 
+                                           pattern="[A-Z0-9]{3,10}">
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                                        <i class="bi bi-search"></i> Buscar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de todos los vehículos -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Todos los Vehículos Registrados</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (vehiculos == null || !vehiculos.Any())
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> No hay vehículos registrados en el sistema.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Placa</th>
+                                                <th>Fecha de Registro</th>
+                                                <th>Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @{
+                                                int contadorVehiculo = 1;
+                                            }
+                                            @foreach (var vehiculo in vehiculos)
+                                            {
+                                                <tr>
+                                                    <td><strong>@contadorVehiculo</strong></td>
+                                                    <td><strong class="fs-5 text-primary">@vehiculo.Placa</strong></td>
+                                                    <td>@vehiculo.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-primary btn-sm" 
+                                                                onclick="verHistorial('@vehiculo.Placa')">
+                                                            <i class="bi bi-eye"></i> Ver Historial
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                contadorVehiculo++;
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(placa))
+                    {
+                        @if (Model == null || !Model.Any())
+                        {
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i> No se encontraron registros para la placa <strong>@placa</strong>.
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Resumen de Estadísticas -->
+                            <div class="row mb-4">
+                                <div class="col-md-2">
+                                    <div class="card text-center border-info">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-info"><i class="bi bi-car-front"></i></h5>
+                                            <h3 class="mb-0">@placa</h3>
+                                            <small class="text-muted">Placa</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card text-center border-primary">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-primary"><i class="bi bi-list-check"></i></h5>
+                                            <h3 class="mb-0">@totalRegistros</h3>
+                                            <small class="text-muted">Total Registros</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card text-center border-success">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-success"><i class="bi bi-clock"></i></h5>
+                                            <h3 class="mb-0">@totalHoras.ToString("F1")</h3>
+                                            <small class="text-muted">Horas Totales</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card text-center border-warning">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-warning"><i class="bi bi-gift"></i></h5>
+                                            <h3 class="mb-0">@totalRecompensas</h3>
+                                            <small class="text-muted">Recompensas</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card text-center border-@(estadoActual == "Dentro" ? "success" : "secondary")">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-@(estadoActual == "Dentro" ? "success" : "secondary")">
+                                                <i class="bi bi-@(estadoActual == "Dentro" ? "check-circle" : "x-circle")"></i>
+                                            </h5>
+                                            <h3 class="mb-0">
+                                                <span class="badge bg-@(estadoActual == "Dentro" ? "success" : "secondary") fs-6">
+                                                    @estadoActual
+                                                </span>
+                                            </h3>
+                                            <small class="text-muted">Estado</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recompensas -->
+                            @if (recompensas.Any())
+                            {
+                                <div class="card border-success">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0"><i class="bi bi-gift-fill"></i> Recompensas Obtenidas</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-success table-striped table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Fecha y Hora</th>
+                                                        <th>Tipo de Recompensa</th>
+                                                        <th>Horas Acumuladas</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @{
+                                                        int contadorRecompensa = 1;
+                                                    }
+                                                    @foreach (var recompensa in recompensas)
+                                                    {
+                                                        <tr>
+                                                            <td><strong>@contadorRecompensa</strong></td>
+                                                            <td>@recompensa.FechaRecompensa.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                                            <td>
+                                                                <strong class="text-success">@recompensa.TipoRecompensa</strong>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-warning text-dark fs-6">
+                                                                    @recompensa.HorasAcumuladas.ToString("F2") horas
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        contadorRecompensa++;
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> Este vehículo aún no ha recibido recompensas. Las recompensas se otorgan automáticamente cuando un vehículo permanece más de 10 horas en el parqueo.
+                                </div>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Ingrese una placa para consultar el historial del vehículo.
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar historial -->
+<div class="modal fade" id="historialModal" tabindex="-1" aria-labelledby="historialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title" id="historialModalLabel">
+                    <i class="bi bi-clock-history"></i> Historial de Vehículo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="historialModalBody">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando historial...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Convertir a mayúsculas automáticamente
+    document.getElementById('placa')?.addEventListener('input', function(e) {
+        e.target.value = e.target.value.toUpperCase().replace(/\s/g, '');
+    });
+
+    // Manejar búsqueda de historial
+    document.getElementById('buscarHistorialForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const placa = document.getElementById('placa').value.trim().toUpperCase();
+        if (placa) {
+            verHistorial(placa);
+        }
+    });
+
+    // Función para cargar y mostrar historial en modal
+    async function verHistorial(placa) {
+        const modal = new bootstrap.Modal(document.getElementById('historialModal'));
+        const modalBody = document.getElementById('historialModalBody');
+        const modalTitle = document.getElementById('historialModalLabel');
+        
+        // Actualizar título
+        modalTitle.innerHTML = `<i class="bi bi-clock-history"></i> Historial - ${placa}`;
+        
+        // Mostrar loading
+        modalBody.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando historial...</p>
+            </div>
+        `;
+        
+        // Abrir modal
+        modal.show();
+        
+        try {
+            const response = await fetch(`/Parqueo/HistorialJson?placa=${encodeURIComponent(placa)}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                modalBody.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> ${data.message}
+                    </div>
+                `;
+                return;
+            }
+            
+            // Construir HTML del historial
+            let html = '';
+            
+            // Determinar estado actual
+            const estadoActual = data.historial && data.historial.some(r => r.estado === 'Dentro') ? 'Dentro' : 'Fuera';
+            const estadoColor = estadoActual === 'Dentro' ? 'success' : 'secondary';
+            const estadoIcon = estadoActual === 'Dentro' ? 'check-circle' : 'x-circle';
+            
+            // Estadísticas
+            html += `
+                <div class="row mb-4">
+                    <div class="col-md-2">
+                        <div class="card text-center border-info">
+                            <div class="card-body">
+                                <h5 class="card-title text-info"><i class="bi bi-car-front"></i></h5>
+                                <h3 class="mb-0">${data.placa}</h3>
+                                <small class="text-muted">Placa</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center border-primary">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary"><i class="bi bi-list-check"></i></h5>
+                                <h3 class="mb-0">${data.totalRegistros}</h3>
+                                <small class="text-muted">Total Registros</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center border-success">
+                            <div class="card-body">
+                                <h5 class="card-title text-success"><i class="bi bi-clock"></i></h5>
+                                <h3 class="mb-0">${data.totalHoras.toFixed(1)}</h3>
+                                <small class="text-muted">Horas Totales</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center border-warning">
+                            <div class="card-body">
+                                <h5 class="card-title text-warning"><i class="bi bi-gift"></i></h5>
+                                <h3 class="mb-0">${data.totalRecompensas}</h3>
+                                <small class="text-muted">Recompensas</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center border-${estadoColor}">
+                            <div class="card-body">
+                                <h5 class="card-title text-${estadoColor}"><i class="bi bi-${estadoIcon}"></i></h5>
+                                <h3 class="mb-0">
+                                    <span class="badge bg-${estadoColor} fs-6">${estadoActual}</span>
+                                </h3>
+                                <small class="text-muted">Estado</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            
+            // Recompensas
+            if (data.recompensas && data.recompensas.length > 0) {
+                html += `
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="bi bi-gift-fill"></i> Recompensas Obtenidas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-success table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Fecha y Hora</th>
+                                            <th>Tipo de Recompensa</th>
+                                            <th>Horas Acumuladas</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                `;
+                
+                data.recompensas.forEach((recompensa, index) => {
+                    // Validar y parsear fecha de recompensa
+                    let fecha;
+                    try {
+                        if (recompensa.fechaRecompensa) {
+                            let fechaStr = recompensa.fechaRecompensa;
+                            if (!fechaStr.includes('Z') && !fechaStr.includes('+') && !fechaStr.includes('T')) {
+                                fechaStr = fechaStr + 'Z';
+                            }
+                            fecha = new Date(fechaStr);
+                            
+                            if (isNaN(fecha.getTime())) {
+                                fecha = new Date(recompensa.fechaRecompensa);
+                            }
+                            if (isNaN(fecha.getTime())) {
+                                fecha = null;
+                            }
+                        } else {
+                            fecha = null;
+                        }
+                    } catch (e) {
+                        fecha = null;
+                    }
+                    
+                    const formatearFechaHora = (fecha) => {
+                        if (!fecha || isNaN(fecha.getTime())) {
+                            return '-';
+                        }
+                        const dia = String(fecha.getDate()).padStart(2, '0');
+                        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+                        const año = fecha.getFullYear();
+                        const horas = String(fecha.getHours()).padStart(2, '0');
+                        const minutos = String(fecha.getMinutes()).padStart(2, '0');
+                        const segundos = String(fecha.getSeconds()).padStart(2, '0');
+                        return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
+                    };
+                    html += `
+                        <tr>
+                            <td><strong>${index + 1}</strong></td>
+                            <td>${formatearFechaHora(fecha)}</td>
+                            <td><strong class="text-success">${recompensa.tipoRecompensa}</strong></td>
+                            <td><span class="badge bg-warning text-dark fs-6">${recompensa.horasAcumuladas.toFixed(2)} horas</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Este vehículo aún no ha recibido recompensas.
+                    </div>
+                `;
+            }
+            
+            modalBody.innerHTML = html;
+        } catch (error) {
+            modalBody.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Error al cargar el historial: ${error.message}
+                </div>
+            `;
+        }
+    }
+</script>
