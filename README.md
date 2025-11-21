@@ -25,6 +25,17 @@ Sistema de control de parqueo desarrollado con ASP.NET Core y Supabase.
 dotnet run
 ```
 
+## Despliegue en Railway
+
+1. Conecta tu repositorio a Railway (https://railway.app)
+2. Railway detectará automáticamente que es un proyecto .NET
+3. Configura las variables de entorno en Railway:
+   - `ASPNETCORE_ENVIRONMENT`: `Production`
+   - `Supabase__ProjectUrl`: URL de tu proyecto Supabase
+   - `Supabase__ApiKey`: API Key de Supabase
+4. Railway desplegará automáticamente
+
+**Ver `Agent/COPIAR_PEGAR_RAILWAY.md` para instrucciones detalladas con valores exactos.**
 
 ## Base de Datos
 

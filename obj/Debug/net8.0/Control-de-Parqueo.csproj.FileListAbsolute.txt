@@ -103,3 +103,4 @@
 /home/rafaelreyes/Documentos/Proyectos web/Control-de-Parqueo/obj/Debug/net8.0/Control-de-Parqueo.genruntimeconfig.cache
 /home/rafaelreyes/Documentos/Proyectos web/Control-de-Parqueo/obj/Debug/net8.0/ref/Control-de-Parqueo.dll
 /home/rafaelreyes/Documentos/Proyectos web/Control-de-Parqueo/obj/Debug/net8.0/Control-de-Parqueo.sourcelink.json
+/home/rafaelreyes/Documentos/Proyectos web/Control-de-Parqueo/bin/Debug/net8.0/railway.json
