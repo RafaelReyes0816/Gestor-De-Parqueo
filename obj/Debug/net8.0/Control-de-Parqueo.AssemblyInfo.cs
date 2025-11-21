@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Control-de-Parqueo")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+66795f449dc9e99b2c4012000b2acf68e28948a2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+799660882f0207baf5096ce3f0c634a3cbad8c7f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Control-de-Parqueo")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Control-de-Parqueo")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

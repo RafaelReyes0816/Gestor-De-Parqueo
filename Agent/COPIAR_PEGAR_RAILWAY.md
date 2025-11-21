@@ -51,8 +51,8 @@ Railway desplegará automáticamente cuando:
 ## Notas Importantes:
 
 - **Usa doble guion bajo** `__` en las variables de Supabase (no `:` ni un solo `_`)
-- Railway detecta automáticamente proyectos .NET por el archivo `.csproj`
-- El archivo `railway.json` está configurado para optimizar el build
+- Railway usará el `Dockerfile` que especifica .NET 8.0 (resuelve el error de versión)
+- El `Dockerfile` está optimizado para Railway
 - Railway usa la variable de entorno `PORT` automáticamente (ya está configurado en `Program.cs`)
 
 ## Solución de Problemas:
