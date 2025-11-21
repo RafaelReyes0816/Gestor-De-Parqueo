@@ -25,27 +25,6 @@ Sistema de control de parqueo desarrollado con ASP.NET Core y Supabase.
 dotnet run
 ```
 
-## Despliegue en Render
-
-### Opción 1: Usando render.yaml (Recomendado)
-
-1. Conecta tu repositorio a Render
-2. Render detectará automáticamente el archivo `render.yaml`
-3. Configura las variables de entorno en Render:
-   - `Supabase__ProjectUrl`: URL de tu proyecto Supabase
-   - `Supabase__ApiKey`: API Key de Supabase
-
-### Opción 2: Configuración Manual
-
-1. Crea un nuevo Web Service en Render
-2. Configura:
-   - **Environment**: `dotnet`
-   - **Build Command**: `dotnet restore && dotnet publish -c Release -o ./publish`
-   - **Start Command**: `cd ./publish && dotnet Control-de-Parqueo.dll`
-3. Agrega las variables de entorno:
-   - `ASPNETCORE_ENVIRONMENT`: `Production`
-   - `Supabase__ProjectUrl`: Tu URL de Supabase
-   - `Supabase__ApiKey`: Tu API Key de Supabase
 
 ## Base de Datos
 
